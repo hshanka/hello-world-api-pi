@@ -37,4 +37,4 @@ jobs:
           minikube service list
           minikube service hello-world-service-py --url
           echo "------------------opening the service------------------"
-          curl $(minikube service hello-world-service-py --url)        
+          curl $(minikube service hello-world-service-py --url)/hello        
