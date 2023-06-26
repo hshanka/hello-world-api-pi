@@ -1,0 +1,32 @@
+name: Deploy to Minikube
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Minikube
+        uses: steebchen/minikube@v1
+        with:
+          minikube-version: latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: your-registry/your-image:latest
+
+      - name: Deploy to Minikube
+        run: |
+          minikube start
+          minikube kubectl -- apply -f deployment.yaml
+          minikube kubectl -- apply -f service.yaml
