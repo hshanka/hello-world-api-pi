@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-api-py
+  labels:
+    app: hello-world-api-py
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-world-api-py
+  template:
+    metadata:
+      labels:
+        app: hello-world-api-py
+    spec:
+      containers:
+        - name: hello-world-api-py
+          image: hshanka/hello-world-api-py
+          ports:
+            - containerPort: 5000
