@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -15,13 +15,14 @@ jobs:
 
       - name: Start minikube
         uses: medyagh/setup-minikube@master
-      
+      - name: Try the cluster !
+        run: kubectl get pods -A
      
       - name: Build image
         run: |
           export SHELL=/bin/bash
           eval $(minikube -p minikube docker-env)
-          docker build -f ./Dockerfile -t local/example .
+          docker build -f ./Dockerfile -t hshanka/hello-world-api-py .
           echo -n "verifying images:"
           docker images        
 
@@ -30,3 +31,10 @@ jobs:
           minikube start
           minikube kubectl -- apply -f deployment.yaml
           minikube kubectl -- apply -f service.yaml
+   
+      - name: Test service URLs
+        run: |
+          minikube service list
+          minikube service example --url
+          echo "------------------opening the service------------------"
+          curl $(minikube service example --url)        
