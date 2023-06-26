@@ -1,39 +1,41 @@
-name: Deploy to Minikube
+name: Build and Tag Docker Image
 
 on:
   push:
     branches:
       - main
-
+      
 jobs:
-  deploy:
+  build-and-tag:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Start minikube
-        uses: medyagh/setup-minikube@master
-      - name: Try the cluster !
-        run: kubectl get pods -A
-     
-      - name: Build image
-        run: |
-          export SHELL=/bin/bash
-          eval $(minikube -p minikube docker-env)
-          docker build -f ./Dockerfile -t hshanka/hello-world-api-py .
-          echo -n "verifying images:"
-          docker images        
 
-      - name: Deploy to Minikube
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v3
+        env:
+          JF_URL: ${{ secrets.JF_URL }}
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+      - name: Build Tag and push Docker Image
+        env:
+          IMAGE_NAME: hshanka.jfrog.io/hshanka-docker-docker/hello-world-api-py:${{ github.run_number }}
         run: |
-          minikube start
-          minikube kubectl -- apply -f deployment.yaml
-          minikube kubectl -- apply -f service.yaml
-   
-      - name: Test service URLs
+          jf docker build -t $IMAGE_NAME .
+          jf docker push $IMAGE_NAME
+          
+      - name: Publish Build info With JFrog CLI
+        env:
+          # Generated and maintained by GitHub
+          JFROG_CLI_BUILD_NAME: hello-world-api-py
+          # JFrog organization secret
+          JFROG_CLI_BUILD_NUMBER : ${{ github.run_number }}
         run: |
-          minikube service list
-          minikube service hello-world-service-py --url
-         
+          # Export the build name and build nuber
+          # Collect environment variables for the build
+          jf rt build-collect-env
+          # Collect VCS details from git and add them to the build
+          jf rt build-add-git
+          # Publish build info
+          jf rt build-publish
